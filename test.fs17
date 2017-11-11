@@ -1,0 +1,18 @@
+Begin Program MATH;
+
+Var x = 3;
+Var y = 5;
+
+# The add function. ☻
+Inputs:
+    -x: First addition parameter.
+    -y: Second addition parameter.
+Output:
+    The sum of x and y. #
+Program Output z add(Input x, Input y) {
+    Return x + y;
+}
+
+Var z = add(x, y);
+
+End;
