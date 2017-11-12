@@ -76,11 +76,11 @@ public:
 
     const void reportError(TOKEN_IDENTIFIER expectedToken, ...) const;
 
-    const void consumeToken(Node *node) const;
-
     const TOKEN_IDENTIFIER currentToken() const;
 
-    const void consumeNonTerminal(Node *originalNode, Node *nonTerminalNode) const;
+    Node *consumeTerminal(Node *node) const;
+
+    Node *consumeNonTerminal(Node *originalNode, Node *nonTerminalNode) const;
 };
 
 #endif //P2_PARSER_H
