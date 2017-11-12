@@ -61,7 +61,7 @@ const void Parser::parse_vars() const {
             reportError(IDENTIFIER, VA_LIST_TERMINATOR);
         }
     } else {
-        return; // TODO: Test this.
+        return;
     }
 }
 
@@ -103,7 +103,7 @@ const void Parser::parse_expr() const {
 
         return;
     } else {
-        return; // TODO: Test this
+        return;
     }
 }
 
@@ -123,7 +123,7 @@ const void Parser::parse_M() const {
 
         return;
     } else {
-        return; // TODO: Test this.
+        return;
     }
 }
 
@@ -183,7 +183,7 @@ const void Parser::parse_mStat() const {
         parse_stat();
         parse_mStat();
     } else {
-        return; // TODO: Test this.
+        return;
     }
 }
 
@@ -381,7 +381,6 @@ const void Parser::parse() const {
     return;
 }
 
-// TODO: Should throw error instead?
 const void Parser::reportError(TOKEN_IDENTIFIER expectedToken, ...) const {
     string listOfExpectedTokens;
 
@@ -395,7 +394,7 @@ const void Parser::reportError(TOKEN_IDENTIFIER expectedToken, ...) const {
 
     listOfExpectedTokens = listOfExpectedTokens.substr(0, listOfExpectedTokens.length() - 4);
 
-    cout << "PARSE ERROR: Got token \"" << TOKEN_IDENTIFIER_TO_TOKEN_NAME_MAP.at(currentToken()) << "\" where " << listOfExpectedTokens << " was expected.\n";
+    cerr << "PARSE ERROR: Got token \"" << TOKEN_IDENTIFIER_TO_TOKEN_NAME_MAP.at(currentToken()) << "\" where " << listOfExpectedTokens << " was expected on line \"" << scanner->getCurrentLineNumber() << "\".\n";
     exit(1);
 }
 

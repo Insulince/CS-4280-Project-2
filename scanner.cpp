@@ -359,7 +359,6 @@ void Scanner::setCommentMode(bool commentMode) {
 }
 
 Token *Scanner::getNextToken() {
-//    cout << "getting next token" << endl;
     int state = INITIAL_STATE;
     TOKEN_IDENTIFIER candidateToken = END_OF_FILE;
     string value;
@@ -367,115 +366,75 @@ Token *Scanner::getNextToken() {
     bool stateIsNotFinal = true;
 
     while (stateIsNotFinal) {
-//        cout << "state is not final -- loop" << endl;
-//        cout << "currentIndex: " << currentIndex << endl;
 
         char nextChar = rawData[currentIndex];
-//        cout << "nextChar: \"" << nextChar << "\"." << endl;
 
         if (nextChar && nextChar != '#') {
-//            cout << "nextChar exists and is not #" << endl;
             try {
                 //The new state is the row corresponding to the current candidate token, and the new column is the column corresponding to the next character.
                 state = FSA_TABLE[TOKEN_IDENTIFIER_TO_FSA_TABLE_ROW_INDEX_MAP.at(candidateToken)][CHARACTER_TO_FSA_TABLE_COLUMN_INDEX_MAP.at(nextChar)];
-//                cout << "new state: \"" << state << "\"" << endl;
 
                 //The current candidate token is the token represented by the current state.
                 candidateToken = STATE_TO_TOKEN_IDENTIFIER_MAP.at(state);
-//                cout << "new candidate token: \"" << TOKEN_IDENTIFIER_TO_TOKEN_NAME_MAP.at(candidateToken) << "\"" << endl;
             } catch (std::out_of_range &exception) {
                 throw string("Scanner Error: Character not in alphabet, \"") + nextChar + "\", on line \"" + to_string(currentLineNumber) + "\".";
             }
         } else {
-//            cout << "nextChar does not exist or is #" << endl;
             state = FINAL_STATE_END_OF_FILE;
         }
 
         if (state >= INITIAL_STATE) {
-//            cout << "state >= 0" << endl;
             if (state < FINAL_STATE_END_OF_FILE) {
-//                cout << "0 <= state <= 100" << endl;
 
                 value += nextChar;
-//                cout << "value \"" << value << "\"" << endl;
 
                 currentIndex++;
-//                cout << "currentIndex: " << currentIndex << endl;
             } else {
-//                cout << "state is final" << endl;
                 stateIsNotFinal = false;
             }
         } else {
             throw string("Scanner Error: Invalid token, \"" + TOKEN_IDENTIFIER_TO_TOKEN_NAME_MAP.at(candidateToken) + "\",  on line \"" + to_string(currentLineNumber) + "\".");
         }
     }
-//    cout << "exited while loop" << endl;
 
     //If the calculated token is an "identifier" make sure that it isn't a keyword, or proceed accordingly if it is.
     if (candidateToken == IDENTIFIER) {
-//        cout << "token is identifier" << endl;
-
         const string &trimmedValue = trim(value);
 
         if (KEYWORD_LITERAL_TO_KEYWORD_TOKEN_IDENTIFIER_MAP.find(trimmedValue) != KEYWORD_LITERAL_TO_KEYWORD_TOKEN_IDENTIFIER_MAP.end()) {
             candidateToken = KEYWORD_LITERAL_TO_KEYWORD_TOKEN_IDENTIFIER_MAP.at(trimmedValue);
-//            cout << "token is now \"" << TOKEN_IDENTIFIER_TO_TOKEN_NAME_MAP.at(candidateToken) << "\"" << endl;
         }
     }
 
-//    cout << "Creating token \"" << TOKEN_IDENTIFIER_TO_TOKEN_NAME_MAP.at(candidateToken) << "\" with value \"" << value << "\" and line number \"" << currentLineNumber << "\"..." << endl;
     Token *token = new Token(candidateToken, value, to_string(currentLineNumber));
 
-//    cout << "currentIndex: " << currentIndex << endl;
     currentLineNumber += newLinesBeforeNextToken();
-//    cout << "currentLineNumber: " << currentLineNumber << endl;
 
     return token;
 }
 
 const int Scanner::newLinesBeforeNextToken() {
-//    cout << "---counting new lines before next token." << endl;
-
     int newLinesBeforeNextToken = 0;
 
     while (currentIndex < rawData.length() && nextCharacterIsNotTokenCharacter(rawData[currentIndex])) {
-//        cout << "---while less than length of data or next char is not a token char -- loop" << endl;
-
         if (rawData[currentIndex] == '#') {
-//            cout << "---this char is #" << endl;
-
             setCommentMode(!isCommentMode());
-
-//            cout << "---comment mode is now \"" << isCommentMode() << "\"" << endl;
         }
 
         if (rawData[currentIndex] == '\n') {
-//            cout << "---this char is a new line" << endl;
-
             newLinesBeforeNextToken++;
-
-//            cout << "---new lines before next token, so far: " << newLinesBeforeNextToken << endl;
         }
 
         currentIndex++;
-
-//        cout << "---currentIndex: " << currentIndex << endl;
     }
-
-//    cout << "---determined there are \"" << newLinesBeforeNextToken << "\" new lines before next token, returning." << endl;
 
     return newLinesBeforeNextToken;
 }
 
 const bool Scanner::nextCharacterIsNotTokenCharacter(const char nextChar) const {
-//    cout << "------checking if next char is token char..." << endl;
     if (isCommentMode()) {
-//        cout << "------is comment mode, so next char is not token char" << endl;
-
         return true;
     } else {
-//        cout << "------the other option, nerd." << endl;
-
         return nextChar == ' ' || nextChar == '\n' || nextChar == '#';
     }
 }
