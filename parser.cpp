@@ -1,11 +1,15 @@
 #include <iostream>
 #include <cstdarg>
+#include <vector>
 #include "parser.h"
 
 using namespace std;
 
+const static int VA_LIST_TERMINATOR = -1;
+const static bool NONTERMINAL = true;
+const static bool TERMINAL = false;
+
 static Token *token = nullptr;
-static int VA_LIST_TERMINATOR = -1;
 
 Parser::Parser(const string &rawData) : rawData(rawData) {
     scanner = new Scanner(rawData);
@@ -21,24 +25,28 @@ void Parser::setRawData(const string &rawData) {
     Parser::rawData = rawData;
 }
 
-const void Parser::parse_program() const {
-    parse_vars();
-    parse_block();
+Node *Parser::parse_program(const int level) const {
+    Node *node = new Node("program", NONTERMINAL, level);
 
-    return;
+    consumeNonTerminal(node, parse_vars(level + 1));
+    consumeNonTerminal(node, parse_block(level + 1));
+
+    return node;
 }
 
-const void Parser::parse_block() const {
-    if (currentToken() == KEYWORD_BEGIN) {
-        consumeToken();
+Node *Parser::parse_block(const int level) const {
+    Node *node = new Node("block", NONTERMINAL, level);
 
-        parse_vars();
-        parse_stats();
+    if (currentToken() == KEYWORD_BEGIN) {
+        consumeToken(node);
+
+        consumeNonTerminal(node, parse_vars(level + 1));
+        consumeNonTerminal(node, parse_stats(level + 1));
 
         if (currentToken() == KEYWORD_END) {
-            consumeToken();
+            consumeToken(node);
 
-            return;
+            return node;
         } else {
             reportError(KEYWORD_END, VA_LIST_TERMINATOR);
         }
@@ -47,38 +55,42 @@ const void Parser::parse_block() const {
     }
 }
 
-const void Parser::parse_vars() const {
+Node *Parser::parse_vars(const int level) const {
+    Node *node = new Node("vars", NONTERMINAL, level);
+
     if (currentToken() == KEYWORD_VAR) {
-        consumeToken();
+        consumeToken(node);
 
         if (currentToken() == IDENTIFIER) {
-            consumeToken();
+            consumeToken(node);
 
-            parse_mvars();
+            consumeNonTerminal(node, parse_mvars(level + 1));
 
-            return;
+            return node;
         } else {
             reportError(IDENTIFIER, VA_LIST_TERMINATOR);
         }
     } else {
-        return;
+        return node;
     }
 }
 
-const void Parser::parse_mvars() const {
-    if (currentToken() == DELIMITER_PERIOD) {
-        consumeToken();
+Node *Parser::parse_mvars(const int level) const {
+    Node *node = new Node("mvars", NONTERMINAL, level);
 
-        return;
+    if (currentToken() == DELIMITER_PERIOD) {
+        consumeToken(node);
+
+        return node;
     } else if (currentToken() == DELIMITER_COMMA) {
-        consumeToken();
+        consumeToken(node);
 
         if (currentToken() == IDENTIFIER) {
-            consumeToken();
+            consumeToken(node);
 
-            parse_mvars();
+            consumeNonTerminal(node, parse_mvars(level + 1));
 
-            return;
+            return node;
         } else {
             reportError(IDENTIFIER, VA_LIST_TERMINATOR);
         }
@@ -87,147 +99,167 @@ const void Parser::parse_mvars() const {
     }
 }
 
-const void Parser::parse_expr() const {
-    parse_M();
+Node *Parser::parse_expr(const int level) const {
+    Node *node = new Node("expr", NONTERMINAL, level);
+
+    consumeNonTerminal(node, parse_M(level + 1));
 
     if (currentToken() == OPERATOR_PLUS) {
-        consumeToken();
+        consumeToken(node);
 
-        parse_expr();
+        consumeNonTerminal(node, parse_expr(level + 1));
 
-        return;
+        return node;
     } else if (currentToken() == OPERATOR_MINUS) {
-        consumeToken();
+        consumeToken(node);
 
-        parse_expr();
+        consumeNonTerminal(node, parse_expr(level + 1));
 
-        return;
+        return node;
     } else {
-        return;
+        return node;
     }
 }
 
-const void Parser::parse_M() const {
-    parse_F();
+Node *Parser::parse_M(const int level) const {
+    Node *node = new Node("M", NONTERMINAL, level);
+
+    consumeNonTerminal(node, parse_F(level + 1));
 
     if (currentToken() == OPERATOR_PERCENT) {
-        consumeToken();
+        consumeToken(node);
 
-        parse_M();
+        consumeNonTerminal(node, parse_M(level + 1));
 
-        return;
+        return node;
     } else if (currentToken() == OPERATOR_ASTERISK) {
-        consumeToken();
+        consumeToken(node);
 
-        parse_M();
+        consumeNonTerminal(node, parse_M(level + 1));
 
-        return;
+        return node;
     } else {
-        return;
+        return node;
     }
 }
 
-const void Parser::parse_F() const {
-    if (currentToken() == DELIMITER_LEFT_PARENTHESIS) {
-        consumeToken();
+Node *Parser::parse_F(const int level) const {
+    Node *node = new Node("F", NONTERMINAL, level);
 
-        parse_F();
+    if (currentToken() == DELIMITER_LEFT_PARENTHESIS) {
+        consumeToken(node);
+
+        consumeNonTerminal(node, parse_F(level + 1));
 
         if (currentToken() == DELIMITER_RIGHT_PARENTHESIS) {
-            consumeToken();
+            consumeToken(node);
 
-            return;
+            return node;
         } else {
             reportError(DELIMITER_RIGHT_PARENTHESIS, VA_LIST_TERMINATOR);
         }
     } else {
-        parse_R();
+        consumeNonTerminal(node, parse_R(level + 1));
+
+        return node;
     }
 }
 
-const void Parser::parse_R() const {
-    if (currentToken() == DELIMITER_LEFT_SQUARE_BRACKET) {
-        consumeToken();
+Node *Parser::parse_R(const int level) const {
+    Node *node = new Node("R", NONTERMINAL, level);
 
-        parse_expr();
+    if (currentToken() == DELIMITER_LEFT_SQUARE_BRACKET) {
+        consumeToken(node);
+
+        consumeNonTerminal(node, parse_expr(level + 1));
 
         if (currentToken() == DELIMITER_RIGHT_SQUARE_BRACKET) {
-            consumeToken();
+            consumeToken(node);
 
-            return;
+            return node;
         } else {
             reportError(DELIMITER_RIGHT_SQUARE_BRACKET, VA_LIST_TERMINATOR);
         }
     } else if (currentToken() == IDENTIFIER) {
-        consumeToken();
+        consumeToken(node);
 
-        return;
+        return node;
     } else if (currentToken() == INTEGER) {
-        consumeToken();
+        consumeToken(node);
 
-        return;
+        return node;
     } else {
         reportError(DELIMITER_LEFT_SQUARE_BRACKET, IDENTIFIER, INTEGER, VA_LIST_TERMINATOR);
     }
 }
 
-const void Parser::parse_stats() const {
-    parse_stat();
-    parse_mStat();
+Node *Parser::parse_stats(const int level) const {
+    Node *node = new Node("stats", NONTERMINAL, level);
 
-    return;
+    consumeNonTerminal(node, parse_stat(level + 1));
+    consumeNonTerminal(node, parse_mStat(level + 1));
+
+    return node;
 }
 
-const void Parser::parse_mStat() const {
+Node *Parser::parse_mStat(const int level) const {
+    Node *node = new Node("mStat", NONTERMINAL, level);
+
     if (currentToken() == KEYWORD_INPUT || currentToken() == KEYWORD_OUTPUT || currentToken() == KEYWORD_BEGIN || currentToken() == KEYWORD_CHECK || currentToken() == KEYWORD_LOOP || currentToken() == IDENTIFIER) {
-        parse_stat();
-        parse_mStat();
+        consumeNonTerminal(node, parse_stat(level + 1));
+        consumeNonTerminal(node, parse_mStat(level + 1));
+
+        return node;
     } else {
-        return;
+        return node;
     }
 }
 
-const void Parser::parse_stat() const {
+Node *Parser::parse_stat(const int level) const {
+    Node *node = new Node("stat", NONTERMINAL, level);
+
     if (currentToken() == KEYWORD_INPUT) {
-        parse_in();
+        consumeNonTerminal(node, parse_in(level + 1));
 
-        return;
+        return node;
     } else if (currentToken() == KEYWORD_OUTPUT) {
-        parse_out();
+        consumeNonTerminal(node, parse_out(level + 1));
 
-        return;
+        return node;
     } else if (currentToken() == KEYWORD_BEGIN) {
-        parse_block();
+        consumeNonTerminal(node, parse_block(level + 1));
 
-        return;
+        return node;
     } else if (currentToken() == KEYWORD_CHECK) {
-        parse_if();
+        consumeNonTerminal(node, parse_if(level + 1));
 
-        return;
+        return node;
     } else if (currentToken() == KEYWORD_LOOP) {
-        parse_loop();
+        consumeNonTerminal(node, parse_loop(level + 1));
 
-        return;
+        return node;
     } else if (currentToken() == IDENTIFIER) {
-        parse_assign();
+        consumeNonTerminal(node, parse_assign(level + 1));
 
-        return;
+        return node;
     } else {
         reportError(KEYWORD_INPUT, KEYWORD_OUTPUT, KEYWORD_BEGIN, KEYWORD_CHECK, KEYWORD_LOOP, IDENTIFIER, VA_LIST_TERMINATOR);
     }
 }
 
-const void Parser::parse_in() const {
+Node *Parser::parse_in(const int level) const {
+    Node *node = new Node("in", NONTERMINAL, level);
+
     if (currentToken() == KEYWORD_INPUT) {
-        consumeToken();
+        consumeToken(node);
 
         if (currentToken() == IDENTIFIER) {
-            consumeToken();
+            consumeToken(node);
 
             if (currentToken() == DELIMITER_SEMICOLON) {
-                consumeToken();
+                consumeToken(node);
 
-                return;
+                return node;
             } else {
                 reportError(DELIMITER_SEMICOLON, VA_LIST_TERMINATOR);
             }
@@ -239,16 +271,18 @@ const void Parser::parse_in() const {
     }
 }
 
-const void Parser::parse_out() const {
-    if (currentToken() == KEYWORD_OUTPUT) {
-        consumeToken();
+Node *Parser::parse_out(const int level) const {
+    Node *node = new Node("out", NONTERMINAL, level);
 
-        parse_expr();
+    if (currentToken() == KEYWORD_OUTPUT) {
+        consumeToken(node);
+
+        consumeNonTerminal(node, parse_expr(level + 1));
 
         if (currentToken() == DELIMITER_SEMICOLON) {
-            consumeToken();
+            consumeToken(node);
 
-            return;
+            return node;
         } else {
             reportError(DELIMITER_SEMICOLON, VA_LIST_TERMINATOR);
         }
@@ -257,23 +291,25 @@ const void Parser::parse_out() const {
     }
 }
 
-const void Parser::parse_if() const {
+Node *Parser::parse_if(const int level) const {
+    Node *node = new Node("if", NONTERMINAL, level);
+
     if (currentToken() == KEYWORD_CHECK) {
-        consumeToken();
+        consumeToken(node);
 
         if (currentToken() == DELIMITER_LEFT_SQUARE_BRACKET) {
-            consumeToken();
+            consumeToken(node);
 
-            parse_expr();
-            parse_RO();
-            parse_expr();
+            consumeNonTerminal(node, parse_expr(level + 1));
+            consumeNonTerminal(node, parse_RO(level + 1));
+            consumeNonTerminal(node, parse_expr(level + 1));
 
             if (currentToken() == DELIMITER_RIGHT_SQUARE_BRACKET) {
-                consumeToken();
+                consumeToken(node);
 
-                parse_stat();
+                consumeNonTerminal(node, parse_stat(level + 1));
 
-                return;
+                return node;
             } else {
                 reportError(DELIMITER_RIGHT_SQUARE_BRACKET, VA_LIST_TERMINATOR);
             }
@@ -285,23 +321,25 @@ const void Parser::parse_if() const {
     }
 }
 
-const void Parser::parse_loop() const {
+Node *Parser::parse_loop(const int level) const {
+    Node *node = new Node("loop", NONTERMINAL, level);
+
     if (currentToken() == KEYWORD_LOOP) {
-        consumeToken();
+        consumeToken(node);
 
         if (currentToken() == DELIMITER_LEFT_SQUARE_BRACKET) {
-            consumeToken();
+            consumeToken(node);
 
-            parse_expr();
-            parse_RO();
-            parse_expr();
+            consumeNonTerminal(node, parse_expr(level + 1));
+            consumeNonTerminal(node, parse_RO(level + 1));
+            consumeNonTerminal(node, parse_expr(level + 1));
 
             if (currentToken() == DELIMITER_RIGHT_SQUARE_BRACKET) {
-                consumeToken();
+                consumeToken(node);
 
-                parse_stat();
+                consumeNonTerminal(node, parse_stat(level + 1));
 
-                return;
+                return node;
             } else {
                 reportError(DELIMITER_RIGHT_SQUARE_BRACKET, VA_LIST_TERMINATOR);
             }
@@ -313,19 +351,21 @@ const void Parser::parse_loop() const {
     }
 }
 
-const void Parser::parse_assign() const {
+Node *Parser::parse_assign(const int level) const {
+    Node *node = new Node("assign", NONTERMINAL, level);
+
     if (currentToken() == IDENTIFIER) {
-        consumeToken();
+        consumeToken(node);
 
         if (currentToken() == OPERATOR_COLON) {
-            consumeToken();
+            consumeToken(node);
 
-            parse_expr();
+            consumeNonTerminal(node, parse_expr(level + 1));
 
             if (currentToken() == DELIMITER_SEMICOLON) {
-                consumeToken();
+                consumeToken(node);
 
-                return;
+                return node;
             } else {
                 reportError(DELIMITER_SEMICOLON, VA_LIST_TERMINATOR);
             }
@@ -337,40 +377,44 @@ const void Parser::parse_assign() const {
     }
 }
 
-const void Parser::parse_RO() const {
+Node *Parser::parse_RO(const int level) const {
+    Node *node = new Node("RO", NONTERMINAL, level);
+
     if (currentToken() == OPERATOR_LESS_THAN) {
-        consumeToken();
+        consumeToken(node);
 
-        return;
+        return node;
     } else if (currentToken() == OPERATOR_LESS_THAN_OR_EQUAL_TO) {
-        consumeToken();
+        consumeToken(node);
 
-        return;
+        return node;
     } else if (currentToken() == OPERATOR_GREATER_THAN) {
-        consumeToken();
+        consumeToken(node);
 
-        return;
+        return node;
     } else if (currentToken() == OPERATOR_GREATER_THAN_OR_EQUAL_TO) {
-        consumeToken();
+        consumeToken(node);
 
-        return;
+        return node;
     } else if (currentToken() == OPERATOR_DOUBLE_EQUALS) {
-        consumeToken();
+        consumeToken(node);
 
-        return;
+        return node;
     } else if (currentToken() == OPERATOR_EXCLAMATION_POINT_EQUALS) {
-        consumeToken();
+        consumeToken(node);
 
-        return;
+        return node;
     } else {
         reportError(OPERATOR_LESS_THAN, OPERATOR_LESS_THAN_OR_EQUAL_TO, OPERATOR_GREATER_THAN, OPERATOR_GREATER_THAN_OR_EQUAL_TO, OPERATOR_DOUBLE_EQUALS, OPERATOR_EXCLAMATION_POINT_EQUALS, VA_LIST_TERMINATOR);
     }
 }
 
-const void Parser::parse() const {
-    consumeToken();
+Node *Parser::parse() const {
+    Node *root = new Node("root", NONTERMINAL, ROOT_LEVEL);
 
-    parse_program();
+    consumeToken(root);
+
+    consumeNonTerminal(root, parse_program(ROOT_LEVEL + 1));
 
     if (currentToken() == END_OF_FILE) {
         cout << "Parsing completed successfully.\n";
@@ -378,7 +422,7 @@ const void Parser::parse() const {
         reportError(END_OF_FILE, -1);
     }
 
-    return;
+    return root;
 }
 
 const void Parser::reportError(TOKEN_IDENTIFIER expectedToken, ...) const {
@@ -394,14 +438,26 @@ const void Parser::reportError(TOKEN_IDENTIFIER expectedToken, ...) const {
 
     listOfExpectedTokens = listOfExpectedTokens.substr(0, listOfExpectedTokens.length() - 4);
 
-    cerr << "PARSE ERROR: Got token \"" << TOKEN_IDENTIFIER_TO_TOKEN_NAME_MAP.at(currentToken()) << "\" where " << listOfExpectedTokens << " was expected on line \"" << scanner->getCurrentLineNumber() << "\".\n";
+    cerr << "PARSE ERROR: Got token \"" << TOKEN_IDENTIFIER_TO_TOKEN_NAME_MAP.at(currentToken()) << "\" but " << listOfExpectedTokens << " was expected on line \"" << scanner->getCurrentLineNumber() << "\".\n";
     exit(1);
 }
 
-const void Parser::consumeToken() const {
+const void Parser::consumeToken(Node *node) const {
+    if (node->getLevel() != ROOT_LEVEL) {
+        vector<Node *> children = node->getChildren();
+        children.push_back(new Node(token->getValue(), TERMINAL, node->getLevel() + 1));
+        node->setChildren(children);
+    }
+
     token = scanner->getNextToken();
 }
 
 const TOKEN_IDENTIFIER Parser::currentToken() const {
     return token->getTokenIdentifier();
+}
+
+const void Parser::consumeNonTerminal(Node *originalNode, Node *nonTerminalNode) const {
+    vector<Node *> originalNodesChildren = originalNode->getChildren();
+    originalNodesChildren.push_back(nonTerminalNode);
+    originalNode->setChildren(originalNodesChildren);
 }

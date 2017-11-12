@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include "parser.h"
+#include "node.h"
 
 using namespace std;
 
@@ -117,19 +118,7 @@ const string getRawInputFileData(const string &inputFileName) {
 }
 
 const void processData(const string &rawData, const string &fileName) {
-//    cout << rawData << "\n\n\n";
-
-//    Scanner *scanner = new Scanner(rawData);
-//
-//    cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " << TOKEN_IDENTIFIER_TO_TOKEN_NAME_MAP.at(scanner->getNextToken()->getTokenIdentifier()) << " !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
-
     Parser *parser = new Parser(rawData);
-
-    parser->parse();
-
-//    TestScanner *testScanner = new TestScanner();
-//
-//    string tokenOutput = testScanner->performScan(rawData);
-//
-//    cout << tokenOutput << endl;
+    Node *tree = parser->parse();
+    cout << tree->toString();
 }

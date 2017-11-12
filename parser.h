@@ -3,6 +3,7 @@
 
 #include "token.h"
 #include "scanner.h"
+#include "node.h"
 
 /* CONTEXT-FREE GRAMMAR:
  * <program>	-> <vars> <block>
@@ -37,47 +38,49 @@ public:
 
     void setRawData(const std::string &rawData);
 
-    const void parse() const;
+    Node *parse() const;
 
-    const void parse_program() const;
+    Node *parse_program(const int level) const;
 
-    const void parse_block() const;
+    Node *parse_block(const int level) const;
 
-    const void parse_vars() const;
+    Node *parse_vars(const int level) const;
 
-    const void parse_mvars() const;
+    Node *parse_mvars(const int level) const;
 
-    const void parse_expr() const;
+    Node *parse_expr(const int level) const;
 
-    const void parse_M() const;
+    Node *parse_M(const int level) const;
 
-    const void parse_F() const;
+    Node *parse_F(const int level) const;
 
-    const void parse_R() const;
+    Node *parse_R(const int level) const;
 
-    const void parse_stats() const;
+    Node *parse_stats(const int level) const;
 
-    const void parse_mStat() const;
+    Node *parse_mStat(const int level) const;
 
-    const void parse_stat() const;
+    Node *parse_stat(const int level) const;
 
-    const void parse_in() const;
+    Node *parse_in(const int level) const;
 
-    const void parse_out() const;
+    Node *parse_out(const int level) const;
 
-    const void parse_if() const;
+    Node *parse_if(const int level) const;
 
-    const void parse_loop() const;
+    Node *parse_loop(const int level) const;
 
-    const void parse_assign() const;
+    Node *parse_assign(const int level) const;
 
-    const void parse_RO() const;
+    Node *parse_RO(const int level) const;
 
     const void reportError(TOKEN_IDENTIFIER expectedToken, ...) const;
 
-    const void consumeToken() const;
+    const void consumeToken(Node *node) const;
 
     const TOKEN_IDENTIFIER currentToken() const;
+
+    const void consumeNonTerminal(Node *originalNode, Node *nonTerminalNode) const;
 };
 
 #endif //P2_PARSER_H
