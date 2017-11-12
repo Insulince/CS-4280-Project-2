@@ -131,12 +131,34 @@ extern const std::map<const int, const TOKEN_IDENTIFIER> STATE_TO_TOKEN_IDENTIFI
 
 class Scanner {
 private:
+    std::string rawData;
+    int currentIndex ;
+    int currentLineNumber;
+    bool commentMode = false;
 public:
-    Scanner();
+    Scanner(const std::string rawData);
 
     ~Scanner();
 
-    Token *getNextToken(const std::string &rawData, int currentIndex, int currentLineNumber) const;
+    const std::string &getRawData() const;
+
+    int getCurrentIndex() const;
+
+    void setCurrentIndex(int currentIndex);
+
+    int getCurrentLineNumber() const;
+
+    void setCurrentLineNumber(int currentLineNumber);
+
+    bool isCommentMode() const;
+
+    void setCommentMode(bool commentMode);
+
+    Token *getNextToken();
+
+    const int newLinesBeforeNextToken();
+
+    const bool nextCharacterIsNotTokenCharacter(const char nextChar) const;
 };
 
 #endif //P1_SCANNER_H

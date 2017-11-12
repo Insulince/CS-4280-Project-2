@@ -1,18 +1,17 @@
-Begin Program MATH;
+Var a, b, c.
 
-Var x = 3;
-Var y = 5;
+Begin
 
-# The add function. ☻
-Inputs:
-    -x: First addition parameter.
-    -y: Second addition parameter.
-Output:
-    The sum of x and y. #
-Program Output z add(Input x, Input y) {
-    Return x + y;
-}
+Var x, y, z.
 
-Var z = add(x, y);
+Input a;
+Output a + x;
+Begin
+Var l, m, n.
+Input m;
+End
+Check [a < 5] Input b;
+Loop [b < 6] Input c;
+b: 7;
 
-End;
+End

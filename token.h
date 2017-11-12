@@ -1,6 +1,7 @@
 #ifndef P1_TOKEN_H
 #define P1_TOKEN_H
 
+#include <map>
 #include <string>
 
 enum TOKEN_IDENTIFIER {
