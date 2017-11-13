@@ -1,5 +1,5 @@
-#ifndef P1_SCANNER_H
-#define P1_SCANNER_H
+#ifndef P2_SCANNER_H
+#define P2_SCANNER_H
 
 #include <string>
 #include <map>
@@ -132,7 +132,7 @@ extern const std::map<const int, const TOKEN_IDENTIFIER> STATE_TO_TOKEN_IDENTIFI
 class Scanner {
 private:
     std::string rawData;
-    int currentIndex ;
+    int currentIndex;
     int currentLineNumber;
     bool commentMode = false;
 public:
@@ -161,4 +161,4 @@ public:
     const bool nextCharacterIsNotTokenCharacter(const char nextChar) const;
 };
 
-#endif //P1_SCANNER_H
+#endif //P2_SCANNER_H

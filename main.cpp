@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include "parser.h"
-#include "node.h"
 
 using namespace std;
 
@@ -113,7 +112,7 @@ const string getRawInputFileData(const string &inputFileName) {
         return rawInputFileData;
     } else {
         cerr << ERROR_MESSAGE_NO_SUCH_FILE << inputFileName << ".fs17\"\n";
-        throw EXIT_CODE_NO_SUCH_INPUT_FILE;
+        exit(EXIT_CODE_NO_SUCH_INPUT_FILE);
     }
 }
 

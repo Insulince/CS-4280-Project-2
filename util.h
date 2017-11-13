@@ -1,8 +1,8 @@
-#ifndef P1_UTIL_H
-#define P1_UTIL_H
+#ifndef P2_UTIL_H
+#define P2_UTIL_H
 
 #include <string>
 
 const std::string trim(const std::string &toBeTrimmed);
 
-#endif //P1_UTIL_H
+#endif //P2_UTIL_H

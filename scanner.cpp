@@ -377,7 +377,8 @@ Token *Scanner::getNextToken() {
                 //The current candidate token is the token represented by the current state.
                 candidateToken = STATE_TO_TOKEN_IDENTIFIER_MAP.at(state);
             } catch (std::out_of_range &exception) {
-                throw string("Scanner Error: Character not in alphabet, \"") + nextChar + "\", on line \"" + to_string(currentLineNumber) + "\".";
+                cerr << string("Scanner Error: Character not in alphabet, \"") + nextChar + "\", on line \"" + to_string(currentLineNumber) + "\".\n";
+                exit(-1);
             }
         } else {
             state = FINAL_STATE_END_OF_FILE;
@@ -393,7 +394,8 @@ Token *Scanner::getNextToken() {
                 stateIsNotFinal = false;
             }
         } else {
-            throw string("Scanner Error: Invalid token, \"" + TOKEN_IDENTIFIER_TO_TOKEN_NAME_MAP.at(candidateToken) + "\",  on line \"" + to_string(currentLineNumber) + "\".");
+            cerr << string("Scanner Error: Invalid token, \"" + TOKEN_IDENTIFIER_TO_TOKEN_NAME_MAP.at(candidateToken) + "\",  on line \"" + to_string(currentLineNumber) + "\".\n");
+            exit(-1);
         }
     }
 
